@@ -12,15 +12,15 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 const template = fs.readFileSync(
-  path.resolve(__dirname, "../client/index.html"), {
-  encoding: "utf8"
-}
+  path.resolve(__dirname, "../client/index.html"),
+  {
+    encoding: "utf8",
+  }
 );
 interface Message {
-  type: "save" | "change",
-  content: string
-};
-
+  type: "save" | "change";
+  content: string;
+}
 
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
   // constructor(private readonly drawioEditorService: DrawioEditorService) {}
@@ -36,7 +36,6 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     this.webview.options = {
       enableScripts: true,
     };
-    console.log(template);
     this.webview.html = this.createHTML(document);
     this.mountListener(document);
   }
@@ -52,24 +51,40 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
   }
 
   private createHTML(document: TextDocument) {
-    return template;
+    const assetsPath = this.webview
+      .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, "../client")));
+    const result = template
+      .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
+      .replace("{{init-data}}", document.getText().replace(new RegExp("\n", "g"), "<br>"))
+      .replace("{{init-config}}", JSON.stringify({
+        theme: ({
+          1:"light",
+          2:"dark",
+          3:"light"//HighContrast
+        }[window.activeColorTheme.kind])
+      }));
+    return result;
   }
 
   private mountListener(document: TextDocument) {
     this.webview.onDidReceiveMessage(({ type, content }: Message) => {
       const actions = {
         save(content: string) { },
-        change: this.clientChange
+        change: this.clientChange,
       };
       actions[type](content, document);
     });
 
     vscode.workspace.onDidChangeTextDocument(async (e) => {
-      if (e.document !== document) { return; }
+      if (e.document !== document) {
+        return;
+      }
       // Sometimes VS Code reports a document change without a change.
-      if (e.contentChanges.length === 0) { return; }
+      if (e.contentChanges.length === 0) {
+        return;
+      }
       const newContent = e.document.getText();
-      this.webview.postMessage({ type:"change", content: newContent});
+      this.webview.postMessage({ type: "change", content: newContent });
     });
   }
 }

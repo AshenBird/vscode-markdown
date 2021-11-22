@@ -1,0 +1,44 @@
+body{
+  padding:0;
+}
+
+.mcswift-markdown{
+  --panel-background-color: transparent;
+  --textarea-background-color: transparent;
+  --border-color: #000;
+  border:0
+}
+
+
+.mcswift-markdown .vditor-ir,
+.mcswift-markdown .vditor-wysiwyg{
+  --border-color: transparent;
+  
+}
+
+.mcswift-markdown .vditor-reset{
+  color: var(--vscode-foreground);
+}
+
+.mcswift-markdown .vditor-panel{
+  background-color: var(--vscode-dropdown-background)
+}
+
+.mcswift-markdown .vditor-hint{
+  background-color: var(--vscode-dropdown-background)
+}
+
+.mcswift-markdown .vditor-toolbar{
+  border: 0;
+  /* background-color: var(--vscode-dropdown-background) */
+}
+
+.vditor-counter.vditor-tooltipped__nw:after{
+  bottom:unset;
+  top:100%;
+  right: 100%;
+}
+
+.mcswift-markdown .vditor-wysiwyg > .vditor-panel.vditor-panel--none{
+  display: none !important; 
+}

@@ -1,6 +1,6 @@
 {
-	"name": "mcswift-vditor",
-	"displayName": "mcswift-vditor",
+	"name": "mcswift-markdown",
+	"displayName": "McSwift Markdown",
 	"description": "",
 	"version": "0.0.1",
 	"engines": {
@@ -33,6 +33,7 @@
 		]
 	},
 	"scripts": {
+		"pub": "vsce publish --yarn",
 		"dev:client": "vite",
 		"vscode:prepublish": "npm run build",
 		"build": "node scripts/build.js",
