@@ -2,7 +2,7 @@
 	"name": "mcswift-markdown",
 	"displayName": "McSwift Markdown",
 	"description": "",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"engines": {
 		"vscode": "^1.62.3"
 	},
@@ -28,7 +28,7 @@
 						"filenamePattern": "*.md"
 					}
 				],
-				"priority": "default"
+				"priority": "option"
 			}
 		]
 	},
