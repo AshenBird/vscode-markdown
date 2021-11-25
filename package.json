@@ -2,7 +2,7 @@
 	"name": "mcswift-markdown",
 	"displayName": "McSwift Markdown",
 	"description": "",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"engines": {
 		"vscode": "^1.62.3"
 	},
