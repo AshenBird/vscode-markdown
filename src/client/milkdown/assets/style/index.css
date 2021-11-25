@@ -1,0 +1,12 @@
+@import '../../../common/base.css';
+@import 'katex/dist/katex.css';
+@import './font.css';
+@import './prism.css';
+
+.mcswift-markdown{
+  padding: 0 30px;
+}
+
+.ProseMirror.editor:focus{
+  outline:none;
+}

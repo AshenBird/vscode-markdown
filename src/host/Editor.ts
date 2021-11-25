@@ -15,7 +15,14 @@ interface Message {
   type: "save" | "change";
   content: string;
 }
-
+function getNonce() {
+  let text = '';
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  for (let i = 0; i < 32; i++) {
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
 
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
   template: string;
@@ -56,9 +63,13 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
   private createHTML(document: TextDocument) {
     const assetsPath = this.webview
       .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, `../client/${this.type}`)));
+      const nonce = getNonce();
     const result = this.template
-      .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
+      // .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
+      .replace("{{base}}", assetsPath + "/")
       .replace("{{init-data}}", document.getText().replace(new RegExp("\n", "g"), "<br>"))
+      // .replace(new RegExp("{{cspSource}}","g"), this.webview.cspSource)
+      // .replace(new RegExp("{{nonce}}","g"), nonce)
       .replace("{{init-config}}", JSON.stringify({
         theme: ({
           1:"light",

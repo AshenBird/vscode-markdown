@@ -10,7 +10,8 @@ fs.ensureDir(getPath("out"));
 const watch = async () => {
   const vditorWatcher = vite.build({
     root:getPath("src/client/vditor/"),
-    base:"mcswift://",
+    // base:"mcswift://",
+    base:"./",
     build:{
       outDir:getPath("out/client/vditor/"),
       emptyOutDir:true,
@@ -19,7 +20,8 @@ const watch = async () => {
   });
   const milkdownWatcher = vite.build({
     root:getPath("src/client/milkdown/"),
-    base:"mcswift://",
+    // base:"mcswift://",
+    base:"./",
     build:{
       outDir:getPath("out/client/milkdown/"),
       emptyOutDir:true,

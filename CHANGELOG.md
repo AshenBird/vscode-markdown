@@ -1,9 +1,15 @@
 # Change Log
 
-All notable changes to the "mcswift-markdown" extension will be documented in this file.
+## v0.0.5
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+插件名称变更 "McSwift Markdown" => "MarkSwift"
+修复部分样式问题
 
-## [Unreleased]
+## v0.0.4
 
-- Initial release
+重新安排尾部高度
+
+## v0.0.3
+
+加入基础的 milkdown 编辑器
+添加尾部高度

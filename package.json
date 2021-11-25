@@ -92,6 +92,8 @@
 		"@milkdown/preset-gfm": "^5.1.2",
 		"@milkdown/theme-nord": "^5.1.2",
 		"@milkdown/utils": "^5.1.2",
+		"@milkdown/vue": "^5.1.2",
+		"katex": "^0.15.1",
 		"vditor": "^3.8.7",
 		"vue": "^3.2.22"
 	}
