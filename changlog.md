@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.5
+
+插件名称变更 "McSwift Markdown" => "MarkSwift"
+
 ## v0.0.4
 
 重新安排尾部高度
