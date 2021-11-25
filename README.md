@@ -1,9 +1,7 @@
 # mcswift-markdown README
 
-mcswift-markdown is a markdown editor power by [vditer](https://github.com/Vanessa219/vditor).
+mcswift-markdown is a markdown editor pack.
 
-## Features
-
-Just a vditer implementation for vscode.
+Include 2 custom editor, base on **[vditor](https://github.com/Vanessa219/vditor)** & **Milkdown**
 
 **Enjoy!**

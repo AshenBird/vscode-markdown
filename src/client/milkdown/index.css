@@ -1,0 +1,7 @@
+.mcswift-markdown{
+  padding: 0 30px;
+}
+
+.ProseMirror.editor:focus{
+  outline:none;
+}

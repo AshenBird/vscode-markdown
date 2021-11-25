@@ -11,20 +11,23 @@ import {
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-const template = fs.readFileSync(
-  path.resolve(__dirname, "../client/index.html"),
-  {
-    encoding: "utf8",
-  }
-);
 interface Message {
   type: "save" | "change";
   content: string;
 }
 
+
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
-  // constructor(private readonly drawioEditorService: DrawioEditorService) {}
-  constructor() { }
+  template: string;
+  constructor(public readonly type:string, private disposables:any[]) {
+    this.template = fs.readFileSync(
+      path.resolve(__dirname, `../client/${this.type}/index.html`),
+      {
+        encoding: "utf8",
+      }
+    );
+    this.register();
+  }
   webview!: vscode.Webview;
 
   public async resolveCustomTextEditor(
@@ -52,8 +55,8 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
 
   private createHTML(document: TextDocument) {
     const assetsPath = this.webview
-      .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, "../client")));
-    const result = template
+      .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, `../client/${this.type}`)));
+    const result = this.template
       .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
       .replace("{{init-data}}", document.getText().replace(new RegExp("\n", "g"), "<br>"))
       .replace("{{init-config}}", JSON.stringify({
@@ -87,4 +90,13 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       this.webview.postMessage({ type: "change", content: newContent });
     });
   }
+  register(){
+    const type = this.type;
+    this.disposables.push(
+     vscode.window.registerCustomEditorProvider(
+      `mcswift.${type}`,
+      this,
+      { webviewOptions: { retainContextWhenHidden: true } }
+    ));
+  };
 }

@@ -2,7 +2,7 @@
 	"name": "mcswift-markdown",
 	"displayName": "McSwift Markdown",
 	"description": "",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"engines": {
 		"vscode": "^1.62.3"
 	},
@@ -11,7 +11,8 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCustomEditor:mcswift.vditer"
+		"onCustomEditor:mcswift.vditor",
+		"onCustomEditor:mcswift.milkdown"
 	],
 	"repository": {
 		"type": "git",
@@ -21,8 +22,18 @@
 	"contributes": {
 		"customEditors": [
 			{
-				"viewType": "mcswift.vditer",
-				"displayName": "McSwift Markdown",
+				"viewType": "mcswift.vditor",
+				"displayName": "MarkSwift Vditor",
+				"selector": [
+					{
+						"filenamePattern": "*.md"
+					}
+				],
+				"priority": "option"
+			},
+			{
+				"viewType": "mcswift.milkdown",
+				"displayName": "MarkSwift Milkdown",
 				"selector": [
 					{
 						"filenamePattern": "*.md"
@@ -34,7 +45,6 @@
 	},
 	"scripts": {
 		"pub": "vsce publish --yarn",
-		"dev:client": "vite",
 		"vscode:prepublish": "npm run build",
 		"build": "node scripts/build.js",
 		"watch": "node scripts/watch.js",
@@ -51,6 +61,8 @@
 		"@types/vscode": "^1.62.0",
 		"@typescript-eslint/eslint-plugin": "^5.1.0",
 		"@typescript-eslint/parser": "^5.1.0",
+		"@vitejs/plugin-vue": "^1.10.0",
+		"@vitejs/plugin-vue-jsx": "^1.3.0",
 		"@vscode/test-electron": "^1.6.2",
 		"cross-env": "^7.0.3",
 		"esbuild": "^0.13.13",
@@ -64,6 +76,23 @@
 		"vite": "^2.6.14"
 	},
 	"dependencies": {
-		"vditor": "^3.8.7"
+		"@emotion/css": "^11.5.0",
+		"@milkdown/core": "^5.1.2",
+		"@milkdown/ctx": "^5.1.2",
+		"@milkdown/design-system": "^5.1.2",
+		"@milkdown/plugin-clipboard": "^5.1.2",
+		"@milkdown/plugin-emoji": "^5.1.2",
+		"@milkdown/plugin-history": "^5.1.2",
+		"@milkdown/plugin-listener": "^5.1.2",
+		"@milkdown/plugin-math": "^5.1.2",
+		"@milkdown/plugin-prism": "^5.1.2",
+		"@milkdown/plugin-slash": "^5.1.2",
+		"@milkdown/plugin-tooltip": "^5.1.2",
+		"@milkdown/preset-commonmark": "^5.1.2",
+		"@milkdown/preset-gfm": "^5.1.2",
+		"@milkdown/theme-nord": "^5.1.2",
+		"@milkdown/utils": "^5.1.2",
+		"vditor": "^3.8.7",
+		"vue": "^3.2.22"
 	}
 }

@@ -1,5 +1,6 @@
 import Vditor from 'vditor';
 import "vditor/src/assets/scss/index.scss";
+import "../common/base.css";
 import "./index.css";
 
 // @ts-ignore

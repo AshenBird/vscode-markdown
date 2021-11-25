@@ -1,0 +1,12 @@
+body{
+  padding:0;
+  padding-bottom:100vh;
+}
+
+.mcswift-markdown{
+  --panel-background-color: transparent;
+  --textarea-background-color: transparent;
+  --border-color: #000;
+  border:0;
+}
+

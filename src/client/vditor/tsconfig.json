@@ -7,7 +7,7 @@
     "allowJs": true,
     "resolveJsonModule": true,
     "rootDir": "./",
-    "outDir": "../../out/client/",
+    "outDir": "../../out/client/vditor",
     "allowSyntheticDefaultImports": true,
     "lib": [
       "DOM"
