@@ -2,7 +2,10 @@
 
 ## v0.0.5
 
-插件名称变更 "McSwift Markdown" => "MarkSwift"
+插件名称变更 "McSwift Markdown" => "MarkSwift"  
+
+milkdown 实现的编辑器通过 Vue 重新进行了封装。
+
 修复部分样式问题
 
 ## v0.0.4
