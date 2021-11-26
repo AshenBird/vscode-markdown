@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.0.8
+
+修复构建错误
+
+## v0.0.7
+
+修复构建错误
+
+## v0.0.6
+
+修复构建错误
+
 ## v0.0.5
 
 插件名称变更 "McSwift Markdown" => "MarkSwift"  

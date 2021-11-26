@@ -7,10 +7,12 @@ import {
   window,
   workspace,
   WorkspaceEdit,
+  Uri
 } from "vscode";
 import * as vscode from "vscode";
-import * as fs from "fs";
 import * as path from "path";
+import { StringDecoder } from "string_decoder";
+import { Buffer } from 'buffer';
 interface Message {
   type: "save" | "change";
   content: string;
@@ -19,20 +21,17 @@ function getNonce() {
   let text = '';
   const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   for (let i = 0; i < 32; i++) {
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
   }
   return text;
 }
-
+function arr2str(arr: Uint8Array) {
+  const decoder = new StringDecoder();
+  return decoder.end(Buffer.from(arr));
+}
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
-  template: string;
-  constructor(public readonly type:string, private disposables:any[]) {
-    this.template = fs.readFileSync(
-      path.resolve(__dirname, `../client/${this.type}/index.html`),
-      {
-        encoding: "utf8",
-      }
-    );
+  template: string = "";
+  constructor(public readonly type: string, private disposables: any[]) {
     this.register();
   }
   webview!: vscode.Webview;
@@ -46,6 +45,12 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     this.webview.options = {
       enableScripts: true,
     };
+    if (!this.template) {
+      const templatePath = path.resolve(__dirname, `../client/${this.type}/index.html`);
+      const templateUri = Uri.file(templatePath);
+      const arr = await workspace.fs.readFile(templateUri);
+      this.template = arr2str(arr);
+    }
     this.webview.html = this.createHTML(document);
     this.mountListener(document);
   }
@@ -63,7 +68,7 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
   private createHTML(document: TextDocument) {
     const assetsPath = this.webview
       .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, `../client/${this.type}`)));
-      const nonce = getNonce();
+    const nonce = getNonce();
     const result = this.template
       // .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
       .replace("{{base}}", assetsPath + "/")
@@ -72,9 +77,9 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       // .replace(new RegExp("{{nonce}}","g"), nonce)
       .replace("{{init-config}}", JSON.stringify({
         theme: ({
-          1:"light",
-          2:"dark",
-          3:"light"//HighContrast
+          1: "light",
+          2: "dark",
+          3: "light"//HighContrast
         }[window.activeColorTheme.kind])
       }));
     return result;
@@ -101,13 +106,13 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       this.webview.postMessage({ type: "change", content: newContent });
     });
   }
-  register(){
+  register() {
     const type = this.type;
     this.disposables.push(
-     vscode.window.registerCustomEditorProvider(
-      `mcswift.${type}`,
-      this,
-      { webviewOptions: { retainContextWhenHidden: true } }
-    ));
+      vscode.window.registerCustomEditorProvider(
+        `mcswift.${type}`,
+        this,
+        { webviewOptions: { retainContextWhenHidden: true } }
+      ));
   };
 }

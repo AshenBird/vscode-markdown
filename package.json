@@ -2,7 +2,7 @@
 	"name": "mcswift-markdown",
 	"displayName": "MarkSwift",
 	"description": "",
-	"version": "0.0.5",
+	"version": "0.0.7",
 	"engines": {
 		"vscode": "^1.62.3"
 	},
