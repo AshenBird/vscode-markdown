@@ -1,6 +1,6 @@
 <script lang="tsx">
 import { Slice } from "prosemirror-model";
-import { defineComponent, onMounted, ref, Ref, inject } from "vue";
+import { defineComponent, onMounted, ref, Ref, inject, watchEffect } from "vue";
 import {
   Editor,
   rootCtx,
@@ -21,7 +21,7 @@ import { emoji } from "@milkdown/plugin-emoji";
 import { prism } from "@milkdown/plugin-prism";
 import { math } from "@milkdown/plugin-math";
 import { VueEditor, useEditor, EditorRef } from "@milkdown/vue";
-import { debounce } from "./utils";
+import { debounce, getTitles } from "./utils";
 import "katex/dist/katex.min";
 
 // @ts-ignore
@@ -38,7 +38,7 @@ export default defineComponent({
     },
   },
   setup: (props, context) => {
-    const outline = inject("outline") as unknown[]
+    const outline = inject("outline") as Ref<unknown[]>;
     const state = vscode.getState();
     const content = ref("");
     if (state?.text) {
@@ -47,6 +47,15 @@ export default defineComponent({
     const isOption = ref(false);
     const editorRef = ref() as Ref<EditorRef>;
     const getEditor = ref();
+    const updateOutline = async () => {
+      outline.value = getTitles().tree;
+      // console.log(document.querySelectorAll(".heading"))
+    };
+    watchEffect(() => {
+      if (editorRef.value) {
+        updateOutline();
+      }
+    });
     const createEditor = () => {
       getEditor.value = useEditor((root) =>
         Editor.make()
@@ -59,7 +68,7 @@ export default defineComponent({
                   (getMarkdown: () => string) => onChange(getMarkdown),
                   200
                 ),
-              ]
+              ],
             });
           })
           .use(vscodeTheme())
@@ -77,9 +86,6 @@ export default defineComponent({
     };
 
     const serverLock = ref(false);
-    const updateOutline = async ()=>{
-      console.log(document.querySelectorAll(".heading"))
-    }
     // 编辑器内容变更事件响应
     const onChange = (getContent: () => string) => {
       if (serverLock.value) {

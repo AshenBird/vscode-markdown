@@ -11,7 +11,7 @@
     "outDir": "../../out/client/milkdown",
     "allowSyntheticDefaultImports": true,
     "lib": [
-      "DOM"
+      "DOM","DOM.Iterable"
     ],
     "types": [
       "node","vite/client"
