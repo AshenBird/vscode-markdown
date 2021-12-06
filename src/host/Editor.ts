@@ -14,7 +14,7 @@ import * as path from "path";
 import { StringDecoder } from "string_decoder";
 import { Buffer } from 'buffer';
 interface Message {
-  type: "save" | "change";
+  type: "ready" | "change";
   content: string;
 }
 function getNonce() {
@@ -31,10 +31,13 @@ function arr2str(arr: Uint8Array) {
 }
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
   template: string = "";
+  webview!: vscode.Webview;
+  content: string = "";
+  private clientLock = false;
+
   constructor(public readonly type: string, private disposables: any[]) {
     this.register();
   }
-  webview!: vscode.Webview;
 
   public async resolveCustomTextEditor(
     document: TextDocument,
@@ -51,11 +54,15 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       const arr = await workspace.fs.readFile(templateUri);
       this.template = arr2str(arr);
     }
+    this.mountListener(document, webviewPanel);
     this.webview.html = this.createHTML(document);
-    this.mountListener(document);
   }
 
-  private async clientChange(content: string, document: TextDocument) {
+  private async updateDocument(content: string, document: TextDocument) {
+    this.clientLock = true;
+    const text = document.getText();
+    if (text === content) { return; }
+    this.content = content;
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.replace(
       document.uri,
@@ -73,28 +80,38 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       // .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
       .replace("{{base}}", assetsPath + "/")
       .replace("{{init-data}}", document.getText().replace(new RegExp("\n", "g"), "<br>"))
-      // .replace(new RegExp("{{cspSource}}","g"), this.webview.cspSource)
-      // .replace(new RegExp("{{nonce}}","g"), nonce)
+      .replace(new RegExp("{{cspSource}}", "g"), this.webview.cspSource)
+      .replace(new RegExp("{{nonce}}", "g"), nonce)
       .replace("{{init-config}}", JSON.stringify({
         theme: ({
           1: "light",
           2: "dark",
-          3: "light"//HighContrast
+          3: "highContrast"//HighContrast
         }[window.activeColorTheme.kind])
       }));
     return result;
   }
 
-  private mountListener(document: TextDocument) {
+  private mountListener(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
     this.webview.onDidReceiveMessage(({ type, content }: Message) => {
       const actions = {
-        save(content: string) { },
-        change: this.clientChange,
+        change: this.updateDocument,
+        ready: () => {
+          console.log('---editor is ready---');
+          this.clientLock = false;
+          this.content = '';
+          this.updateWebview(document, webviewPanel);
+          return;
+        }
       };
       actions[type](content, document);
     });
 
-    vscode.workspace.onDidChangeTextDocument(async (e) => {
+    const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async (e) => {
+      if (this.clientLock) {
+        this.clientLock = false;
+        return;
+      }
       if (e.document !== document) {
         return;
       }
@@ -102,8 +119,24 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       if (e.contentChanges.length === 0) {
         return;
       }
-      const newContent = e.document.getText();
-      this.webview.postMessage({ type: "change", content: newContent });
+      this.updateWebview(document, webviewPanel);
+    });
+
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+    });
+    vscode.window.onDidChangeActiveColorTheme(() => {
+      webviewPanel.webview.postMessage({
+        type: 'restart',
+      });
+    });
+  }
+  updateWebview(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
+    const text = document.getText();
+    if (text === this.content) { return; }
+    webviewPanel.webview.postMessage({
+      type: 'change',
+      text,
     });
   }
   register() {

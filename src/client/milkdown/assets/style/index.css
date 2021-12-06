@@ -4,9 +4,10 @@
 @import './prism.css';
 
 .mcswift-markdown{
+  box-sizing: border-box;
   padding: 0 30px;
 }
 
 .ProseMirror.editor:focus{
-  outline:none;
+  outline: none;
 }

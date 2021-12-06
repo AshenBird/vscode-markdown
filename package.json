@@ -81,6 +81,7 @@
 		"@milkdown/ctx": "^5.1.2",
 		"@milkdown/design-system": "^5.1.2",
 		"@milkdown/plugin-clipboard": "^5.1.2",
+		"@milkdown/plugin-collaborative": "^5.1.2",
 		"@milkdown/plugin-emoji": "^5.1.2",
 		"@milkdown/plugin-history": "^5.1.2",
 		"@milkdown/plugin-listener": "^5.1.2",
@@ -93,7 +94,9 @@
 		"@milkdown/theme-nord": "^5.1.2",
 		"@milkdown/utils": "^5.1.2",
 		"@milkdown/vue": "^5.1.2",
+		"@vicons/ionicons5": "^0.11.0",
 		"katex": "^0.15.1",
+		"naive-ui": "^2.21.4",
 		"vditor": "^3.8.7",
 		"vue": "^3.2.22"
 	}
