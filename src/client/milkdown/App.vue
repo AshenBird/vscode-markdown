@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DefineComponent } from "vue";
+import { ref, provide } from "vue";
 import {NConfigProvider, NLayout, NLayoutHeader, NLayoutSider, NMenu, darkTheme } from "naive-ui"
 import MilkdownEditor from "./Editor.vue";
 import { NIcon, useMessage } from 'naive-ui'
@@ -14,6 +14,8 @@ import {
 // 初始化配置项
 let config: Record<string, unknown> = {};
 const configBus = document.getElementById("Config");
+const outline = ref<unknown>([]) 
+provide("outline",outline)
 if (configBus) {
   config = JSON.parse(configBus.innerText);
   document.body.removeChild(configBus);
@@ -87,7 +89,7 @@ const menuOptions = [
 <n-config-provider :theme="theme">
   <n-layout style="height: 100vh; background-color: var(--surface);">
     <n-layout-header style="height: 50px; padding: 24px;" bordered></n-layout-header>
-    <n-layout position="absolute" style="top: 50px;" has-sider>
+    <n-layout position="absolute" style="top: 50px; background-color: var(--surface);" has-sider>
       <n-layout-sider
         :native-scrollbar="false"
         collapse-mode="transform"

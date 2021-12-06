@@ -1,6 +1,6 @@
 <script lang="tsx">
 import { Slice } from "prosemirror-model";
-import { defineComponent, onMounted, ref, Ref } from "vue";
+import { defineComponent, onMounted, ref, Ref, inject } from "vue";
 import {
   Editor,
   rootCtx,
@@ -38,6 +38,7 @@ export default defineComponent({
     },
   },
   setup: (props, context) => {
+    const outline = inject("outline") as unknown[]
     const state = vscode.getState();
     const content = ref("");
     if (state?.text) {
@@ -58,7 +59,7 @@ export default defineComponent({
                   (getMarkdown: () => string) => onChange(getMarkdown),
                   200
                 ),
-              ],
+              ]
             });
           })
           .use(vscodeTheme())
@@ -76,6 +77,9 @@ export default defineComponent({
     };
 
     const serverLock = ref(false);
+    const updateOutline = async ()=>{
+      console.log(document.querySelectorAll(".heading"))
+    }
     // 编辑器内容变更事件响应
     const onChange = (getContent: () => string) => {
       if (serverLock.value) {
@@ -84,6 +88,7 @@ export default defineComponent({
       }
       const text = getContent();
       if (content.value === text) return;
+      updateOutline();
       content.value = text;
       vscode.setState({ text });
       vscode.postMessage({
