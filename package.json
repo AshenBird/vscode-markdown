@@ -1,8 +1,8 @@
 {
-	"name": "mcswift-markdown",
+	"name": "markdown",
 	"displayName": "MarkSwift",
 	"description": "",
-	"version": "0.0.8",
+	"version": "0.1.0",
 	"engines": {
 		"vscode": "^1.62.3"
 	},
@@ -11,8 +11,7 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCustomEditor:mcswift.vditor",
-		"onCustomEditor:mcswift.milkdown"
+		"onCustomEditor:MarkSwift"
 	],
 	"repository": {
 		"type": "git",
@@ -22,18 +21,8 @@
 	"contributes": {
 		"customEditors": [
 			{
-				"viewType": "mcswift.vditor",
-				"displayName": "MarkSwift Vditor",
-				"selector": [
-					{
-						"filenamePattern": "*.md"
-					}
-				],
-				"priority": "option"
-			},
-			{
-				"viewType": "mcswift.milkdown",
-				"displayName": "MarkSwift Milkdown",
+				"viewType": "MarkSwift",
+				"displayName": "MarkSwift",
 				"selector": [
 					{
 						"filenamePattern": "*.md"

@@ -1,6 +1,6 @@
 
 
-import { shallowRef } from "vue";
+import { h } from "vue";
 export const debounce = <T extends unknown[]>(
   func: (...args: T) => void,
   delay: number
@@ -49,7 +49,7 @@ export const getTitles = () => {
       level,
       label: node.textContent,
       key: id,
-      // suffix:()=>(()=><i id={id}></i>),
+      suffix:() =>h("i", { id, class:"outline-item-anchor" }),
       getRect: () => node.getClientRects(),
       scroll: () => node.scrollIntoView({
         behavior: "smooth"

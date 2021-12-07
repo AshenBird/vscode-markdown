@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, provide, computed,watchEffect } from "vue";
+import { ref, provide, computed, watchEffect } from "vue";
 import {
   NConfigProvider,
   NLayout,
@@ -9,7 +9,7 @@ import {
   NInput,
   NSpace,
   darkTheme,
-  TreeOption
+  TreeOption,
 } from "naive-ui";
 import MilkdownEditor from "./Editor.vue";
 import { Key } from "naive-ui/lib/tree/src/interface";
@@ -27,8 +27,8 @@ const theme = config.theme === "dark" ? darkTheme : null;
 
 /** 大纲功能 **/
 // 大纲树类型
-export interface OutlineTreeOption  extends  TreeOption{
-  scroll:()=>void
+export interface OutlineTreeOption extends TreeOption {
+  scroll: () => void;
 }
 // 用来检索大纲的数据
 const pattern = ref("");
@@ -37,51 +37,69 @@ const outline = ref<OutlineTreeOption[]>([]);
 // 扁平的大纲数据
 const flatOutline = ref<OutlineTreeOption[]>([]);
 // 实际显式的大纲，后期加入大纲过滤功能
-const outlineShow = computed(()=>{
-  return outline.value
-})
-const selectedKeys = ref<(string|number)[]>([])
+const outlineShow = computed(() => {
+  return outline.value;
+});
+
+const selectedKeys = ref<(string | number)[]>([]);
 // 展开的大纲层级
-const expandedKeys = ref<(string|number)[]>([])
-watchEffect(()=>{
-  expandedKeys.value = flatOutline.value.map(item=>item.key as string|number)
+const expandedKeys = ref<(string | number)[]>([]);
+
+const scrollLock = ref(false);
+
+watchEffect(() => {
+  expandedKeys.value = flatOutline.value.map(
+    (item) => item.key as string | number
+  );
 });
 const outlineExpendChange = ((
-  keys: (string|number)[],
-  list: (OutlineTreeOption|null)[]
+  keys: (string | number)[],
+  list: (OutlineTreeOption | null)[]
 ) => {
-  expandedKeys.value = keys
+  expandedKeys.value = keys;
 }) as (value: Key[], option: Array<TreeOption | null>) => void;
 
 // 注入
 provide("flatOutline", flatOutline);
 provide("outline", outline);
+
+// 滚动相关
+const lastScrollTime = ref(0);
+const onScroll = () => {
+  lastScrollTime.value = Date.now();
+  if (scrollLock.value) return;
+  const rs = [];
+  for (const item of flatOutline.value) {
+    // @ts-ignore
+    const { top } = item.getRect()[0];
+    if (top > 0) rs.push([top, item]);
+  }
+  rs.sort((a, b) => a[0] - b[0]);
+  selectedKeys.value = [rs[0][1].key];
+  const suffix = document.getElementById(rs[0][1].key);
+  suffix?.scrollIntoView({
+    block:"center",
+    behavior: "smooth",
+  });
+};
+
+
 // 大纲元素被点击时的响应
 const outlineSelected = ((
-  keys: (string|number)[],
-  list: (OutlineTreeOption|null)[]
+  keys: (string | number)[],
+  list: (OutlineTreeOption | null)[]
 ) => {
-  selectedKeys.value = keys
-  if(list.length>0){
-    list[0]?.scroll()
+  selectedKeys.value = keys;
+  if (list.length > 0) {
+    scrollLock.value = true;
+    list[0]?.scroll();
+    const timer = setInterval(()=>{
+      if(Date.now()-lastScrollTime.value<=200)return;
+      scrollLock.value = false;
+      clearInterval(timer)
+    },200)
   }
 }) as (value: Key[], option: Array<TreeOption | null>) => void;
-
-
-
-
-const onScroll=()=>{
-  const rs = []
-  for(const item of flatOutline.value){
-    // @ts-ignore
-    const {top} = item.getRect()[0]
-    if(top>0)rs.push([top,item]);
-  }
-  rs.sort((a,b)=>a[0]-b[0])
-  selectedKeys.value = [rs[0][1].key]
-}
-// 立即矫正一下
-onScroll()
 
 </script>
 <template>
@@ -125,7 +143,7 @@ onScroll()
           :native-scrollbar="false"
           @scroll="onScroll"
         >
-          <milkdown-editor :config="config" />
+          <milkdown-editor @ready="onScroll" :config="config" />
         </n-layout>
       </n-layout>
     </n-layout>

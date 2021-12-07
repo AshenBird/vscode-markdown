@@ -140,10 +140,10 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     });
   }
   register() {
-    const type = this.type;
+    // const type = this.type;
     this.disposables.push(
       vscode.window.registerCustomEditorProvider(
-        `mcswift.${type}`,
+        `MarkSwift`,
         this,
         { webviewOptions: { retainContextWhenHidden: true } }
       ));

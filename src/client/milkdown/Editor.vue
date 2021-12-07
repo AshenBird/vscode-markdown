@@ -42,6 +42,7 @@ const vscode = acquireVsCodeApi();
 export default defineComponent({
   emits: {
     change: null,
+    ready:null,
   },
   props: {
     config: {
@@ -121,6 +122,7 @@ export default defineComponent({
             clearInterval(timer)
             updateOutline();
             console.log("editor mounted");
+            context.emit("ready")
             vscode.postMessage({
               type: "ready",
             });
