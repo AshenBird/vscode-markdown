@@ -1,6 +1,6 @@
 <script lang="tsx">
 import { Slice } from "prosemirror-model";
-import { defineComponent, onMounted, ref, Ref, inject, watchEffect } from "vue";
+import { defineComponent, onMounted, ref, Ref, inject, watchEffect, nextTick } from "vue";
 import {
   Editor,
   rootCtx,
@@ -58,6 +58,7 @@ export default defineComponent({
       const {tree,list} =getTitles()
       outline.value = tree;
       flatOutline.value = list
+      return outline.value
     };
     const state = vscode.getState();
     const content = ref("");
@@ -114,23 +115,6 @@ export default defineComponent({
       });
     };
 
-    const stop = watchEffect(() => {
-      if (editorRef.value) {
-        const timer = setInterval(async ()=>{
-          const editor = editorRef.value.get() as Editor;
-          if(editor){
-            clearInterval(timer)
-            await updateOutline();
-            console.log("editor mounted");
-            context.emit("ready")
-            vscode.postMessage({
-              type: "ready",
-            });
-            stop();
-          }
-        },100)
-      }
-    });
 
     const updateEditor = (markdown: string) => {
       if (typeof markdown !== "string") return;
@@ -186,6 +170,29 @@ export default defineComponent({
       }
     });
     createEditor();
+    
+    const stop = watchEffect(() => {
+      if (editorRef.value) {
+        const timer = setInterval(async ()=>{
+          const editor = editorRef.value.get() as Editor;
+          if(editor){
+            if(content.value && content.value.includes(`# `)){
+              const ol = await updateOutline();
+              if(!ol){
+                return;
+              }
+            }
+            clearInterval(timer);
+            context.emit("ready")
+            vscode.postMessage({
+              type: "ready",
+            });
+            stop();
+          }
+        },100)
+      }
+    });
+
     return () =>
       isOption.value ? (
         <VueEditor editor={getEditor.value} editorRef={editorRef} />
