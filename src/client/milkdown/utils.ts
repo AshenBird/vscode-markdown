@@ -49,23 +49,29 @@ export const getTitles = () => {
       level,
       label: node.textContent,
       key: id,
-      scroll: () => node.scrollIntoView(),
+      // suffix:()=>(()=><i id={id}></i>),
+      getRect: () => node.getClientRects(),
+      scroll: () => node.scrollIntoView({
+        behavior: "smooth"
+      }),
       // children: [],
     };
     list.set(id, item);
     groupMap.set(id, item);
-    if (level === "1") { return; } // 顶级
-    
-    const f = groupMap.get(group);
-    if(!f.children){
+    if (level === "1") {
+      // groupMap.set(id, item);
+      return;
+    } // 顶级
+    const f = list.get(group);
+    if (!f.children) {
       f.children = [];
     }
-    console.log(f, item);
-    f.children.push(groupMap.get(id));
+    f.children.push(list.get(id));
+    groupMap.delete(id);
   });
 
   return {
-    list,
-    tree: [...groupMap.values()].filter((item) => item.level === "2")
+    list: [...list.values()],
+    tree: [...groupMap.values()]
   };
 };

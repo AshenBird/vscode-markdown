@@ -1,6 +1,6 @@
 import { createApp } from "vue";
 import App from "./App.vue";
-import "./assets/style/index.css";
+import "./assets/style/index.scss";
 
 // @ts-ignore
 

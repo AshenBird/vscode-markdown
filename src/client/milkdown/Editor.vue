@@ -9,19 +9,31 @@ import {
   defaultValueCtx,
 } from "@milkdown/core";
 import { vscode as vscodeTheme } from "./theme-vscode/index";
+// Github Markdown 语法插件
 import { gfm } from "@milkdown/preset-gfm";
+// 选词工具栏插件
 import { tooltip } from "@milkdown/plugin-tooltip";
+// 斜线工具栏插件
 import { slash } from "@milkdown/plugin-slash";
+// 历史插件
 import { history } from "@milkdown/plugin-history";
+// 监听器插件
 import { listener, listenerCtx } from "@milkdown/plugin-listener";
+// 剪贴板插件
 import { clipboard } from "@milkdown/plugin-clipboard";
-// 协同编辑
+// 协同编辑插件
 // import { collaborative, y } from '@milkdown/plugin-collaborative';
+// emoji 表情插件
 import { emoji } from "@milkdown/plugin-emoji";
+// prism 支持的代码高亮插件
 import { prism } from "@milkdown/plugin-prism";
+// LaTeX 数学公式插件
 import { math } from "@milkdown/plugin-math";
+// milkdown 的 vue 组件封装
 import { VueEditor, useEditor, EditorRef } from "@milkdown/vue";
+// 工具函数
 import { debounce, getTitles } from "./utils";
+// 样式
 import "katex/dist/katex.min";
 
 // @ts-ignore
@@ -38,7 +50,14 @@ export default defineComponent({
     },
   },
   setup: (props, context) => {
+    // 大纲
     const outline = inject("outline") as Ref<unknown[]>;
+    const flatOutline = inject("flatOutline") as Ref<unknown[]>;
+    const updateOutline = async () => {
+      const {tree,list} =getTitles()
+      outline.value = tree;
+      flatOutline.value = list
+    };
     const state = vscode.getState();
     const content = ref("");
     if (state?.text) {
@@ -47,15 +66,6 @@ export default defineComponent({
     const isOption = ref(false);
     const editorRef = ref() as Ref<EditorRef>;
     const getEditor = ref();
-    const updateOutline = async () => {
-      outline.value = getTitles().tree;
-      // console.log(document.querySelectorAll(".heading"))
-    };
-    watchEffect(() => {
-      if (editorRef.value) {
-        updateOutline();
-      }
-    });
     const createEditor = () => {
       getEditor.value = useEditor((root) =>
         Editor.make()
@@ -103,11 +113,21 @@ export default defineComponent({
       });
     };
 
-    onMounted(() => {
-      console.log("editor mounted");
-      vscode.postMessage({
-        type: "ready",
-      });
+    const stop = watchEffect(() => {
+      if (editorRef.value) {
+        const timer = setInterval(()=>{
+          const editor = editorRef.value.get() as Editor;
+          if(editor){
+            clearInterval(timer)
+            updateOutline();
+            console.log("editor mounted");
+            vscode.postMessage({
+              type: "ready",
+            });
+          }
+        },100)
+        stop();
+      }
     });
 
     const updateEditor = (markdown: string) => {
@@ -115,6 +135,7 @@ export default defineComponent({
       const editor = editorRef.value.get() as Editor;
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
+        console.log(view)
         const parser = ctx.get(parserCtx);
         const doc = parser(markdown);
         if (!doc) {

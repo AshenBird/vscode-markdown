@@ -1,0 +1,57 @@
+@import "../../../common/base.css";
+@import "katex/dist/katex.css";
+@import "./font.css";
+@import "./prism.css";
+
+.mcswift-markdown {
+  box-sizing: border-box;
+  /* padding: 0 30px; */
+}
+
+.ProseMirror.editor:focus {
+  outline: none;
+}
+.milkdown {
+  border-left: 2px solid #555;
+}
+.editor {
+  .heading {
+    position: relative;
+  }
+  .heading::before {
+    position: absolute;
+    left: -90px;
+    width: 60px;
+    top: 0;
+    bottom: 0;
+    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    color: #333;
+    font-size: 18px;
+  }
+  h1.heading {
+    &::before {
+      content: "H1";
+    }
+  }
+  h2.heading {
+    border-bottom: 1px solid #555;
+    &::before {
+      content: "H2";
+    }
+  }
+  h3.heading::before {
+    content: "H3";
+  }
+  h4.heading::before {
+    content: "H4";
+  }
+  h5.heading::before {
+    content: "H5";
+  }
+  h6.heading::before {
+    content: "H6";
+  }
+}

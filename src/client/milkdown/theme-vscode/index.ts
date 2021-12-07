@@ -58,26 +58,26 @@ export const vscode = () =>
                         h6 {
                             margin-top: 24px !important;
                             margin-bottom: 16px !important;
-                            font-weight: 600;
+                            font-weight: bold;
                             line-height: 1.25;
                         }
                         h1 {
                             padding-bottom: 0.3em;
-                            font-size: 2em;
+                            font-size: 2.6em;
                         }
                         h2 {
                             padding-bottom: 0.3em;
-                            font-size: 1.5em;
+                            font-size: 2.2em;
                         }
                         h3 {
-                            font-size: 1.25em;
+                            font-size: 1.8em;
                         }
                         h4 {
-                            font-size: 1em;
+                            font-size: 1.4em;
                         }
                         h5,
                         h6 {
-                            font-size: 0.875em;
+                            font-size: 1em;
                         }
                     }
                     .ProseMirror.editor > :first-child {
