@@ -5,8 +5,6 @@ const { createClientBuildConfig, getPath } = require("./utils");
 
 fs.ensureDir(getPath("out"));
 const build = async () => {
-
-  vite.build(createClientBuildConfig("vditor"));
   vite.build(createClientBuildConfig("milkdown"));
 
   const hostBuilder = execa("npm", ["run", "build:host"]);

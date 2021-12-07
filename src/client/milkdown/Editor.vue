@@ -116,19 +116,19 @@ export default defineComponent({
 
     const stop = watchEffect(() => {
       if (editorRef.value) {
-        const timer = setInterval(()=>{
+        const timer = setInterval(async ()=>{
           const editor = editorRef.value.get() as Editor;
           if(editor){
             clearInterval(timer)
-            updateOutline();
+            await updateOutline();
             console.log("editor mounted");
             context.emit("ready")
             vscode.postMessage({
               type: "ready",
             });
+            stop();
           }
         },100)
-        stop();
       }
     });
 
@@ -137,7 +137,6 @@ export default defineComponent({
       const editor = editorRef.value.get() as Editor;
       editor.action((ctx) => {
         const view = ctx.get(editorViewCtx);
-        console.log(view)
         const parser = ctx.get(parserCtx);
         const doc = parser(markdown);
         if (!doc) {

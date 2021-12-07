@@ -37,6 +37,8 @@ export const vscode = () =>
                     padding: 4.5rem 1.25rem 1rem;
                     box-sizing: border-box;
 
+                    font-size: var(--vscode-font-size);
+
                     .code-fence {
                         background: unset;
                         ${mixin.border()}
@@ -63,17 +65,17 @@ export const vscode = () =>
                         }
                         h1 {
                             padding-bottom: 0.3em;
-                            font-size: 2.6em;
+                            font-size: 1.8em;
                         }
                         h2 {
                             padding-bottom: 0.3em;
-                            font-size: 2.2em;
+                            font-size: 1.6em;
                         }
                         h3 {
-                            font-size: 1.8em;
+                            font-size: 1.4em;
                         }
                         h4 {
-                            font-size: 1.4em;
+                            font-size: 1.2em;
                         }
                         h5,
                         h6 {

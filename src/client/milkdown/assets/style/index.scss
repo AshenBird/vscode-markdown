@@ -3,6 +3,11 @@
 @import "./font.css";
 @import "./prism.css";
 
+
+html{
+  font-size: 14px;
+}
+
 .mcswift-markdown {
   box-sizing: border-box;
   /* padding: 0 30px; */

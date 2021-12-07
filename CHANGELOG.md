@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.1.1
+
+修复样式问题，并优化部分样式，尝试解决首次打开文档时无法正确生成大纲的问题。
+
+## v0.1.0
+
+修改插件id，抛弃 vditor , 完成大纲。
+
 ## v0.0.8
 
 修复构建错误
@@ -14,7 +22,7 @@
 
 ## v0.0.5
 
-插件名称变更 "McSwift Markdown" => "MarkSwift"  
+插件名称变更 "McSwift Markdown" => "MarkSwift"
 
 milkdown 实现的编辑器通过 Vue 重新进行了封装。
 
@@ -26,5 +34,4 @@ milkdown 实现的编辑器通过 Vue 重新进行了封装。
 
 ## v0.0.3
 
-加入基础的 milkdown 编辑器
-添加尾部高度
+加入基础的 milkdown 编辑器 添加尾部高度
