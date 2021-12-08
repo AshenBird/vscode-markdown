@@ -1,5 +1,3 @@
-
-
 import { h } from "vue";
 export const debounce = <T extends unknown[]>(
   func: (...args: T) => void,
@@ -15,9 +13,8 @@ export const debounce = <T extends unknown[]>(
   };
 };
 
-
 // 文章导航实现
-export const getTitles = () => {
+export const getTitles = (pattern:string) => {
   const flatNodes = [];
   const groupMap = new Map();
   const list = new Map();
@@ -39,30 +36,53 @@ export const getTitles = () => {
     return 0;
   });
 
+  const getGroup = (level: number) => {
+    return currentGroup[level.toString()];
+  };
   // 逐个遍历生成树
   flatNodes.forEach((node, index) => {
     const level = node.nodeName[1];
-    const id = `AT${index + 1}`;
+    const id = `AT${index + 1}-${Date.now()}`;
     currentGroup[level] = id;
-    const group = currentGroup[(Number(level) - 1).toString()];
     const item = {
       level,
       label: node.textContent,
       key: id,
-      suffix:() =>h("i", { id, class:"outline-item-anchor" }),
+      indent: 0,
+      suffix: () => h("i", { id, class: "outline-item-anchor" }),
+      prefix: () => h("i"),
       getRect: () => node.getClientRects(),
-      scroll: () => node.scrollIntoView({
-        behavior: "smooth"
-      }),
+      scroll: () =>
+        node.scrollIntoView({
+          behavior: "smooth",
+        }),
       // children: [],
     };
     list.set(id, item);
     groupMap.set(id, item);
-    if (level === "1") {
-      // groupMap.set(id, item);
-      return;
-    } // 顶级
-    const f = list.get(group);
+
+    let fl = Number(level) - 1;
+    let f: { indent: number; children: any[] } | null = null;
+    let indent = 0;
+    for (;;) {
+      if (fl === 0) {
+        return;
+      }
+      let group = getGroup(fl);
+      f = list.get(group);
+      item.indent = indent;
+      item.prefix = () =>
+        h("i", {
+          class: `outline-indent-${
+            (f as { indent: number; children: any[] }).indent + indent
+          }`,
+        });
+      if (f) {
+        break;
+      }
+      fl = fl - 1;
+      indent = indent + 1;
+    }
     if (!f.children) {
       f.children = [];
     }
@@ -72,6 +92,6 @@ export const getTitles = () => {
 
   return {
     list: [...list.values()],
-    tree: [...groupMap.values()]
+    tree: [...groupMap.values()],
   };
 };

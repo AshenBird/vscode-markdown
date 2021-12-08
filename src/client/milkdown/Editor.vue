@@ -1,6 +1,14 @@
 <script lang="tsx">
 import { Slice } from "prosemirror-model";
-import { defineComponent, onMounted, ref, Ref, inject, watchEffect, nextTick } from "vue";
+import {
+  defineComponent,
+  onMounted,
+  ref,
+  Ref,
+  inject,
+  watchEffect,
+  nextTick,
+} from "vue";
 import {
   Editor,
   rootCtx,
@@ -42,7 +50,7 @@ const vscode = acquireVsCodeApi();
 export default defineComponent({
   emits: {
     change: null,
-    ready:null,
+    ready: null,
   },
   props: {
     config: {
@@ -54,11 +62,12 @@ export default defineComponent({
     // 大纲
     const outline = inject("outline") as Ref<unknown[]>;
     const flatOutline = inject("flatOutline") as Ref<unknown[]>;
+    const pattern = inject("pattern") as Ref<string>
     const updateOutline = async () => {
-      const {tree,list} =getTitles()
+      const { tree, list } = getTitles(pattern.value);
       outline.value = tree;
-      flatOutline.value = list
-      return outline.value
+      flatOutline.value = list;
+      return outline.value;
     };
     const state = vscode.getState();
     const content = ref("");
@@ -115,7 +124,6 @@ export default defineComponent({
       });
     };
 
-
     const updateEditor = (markdown: string) => {
       if (typeof markdown !== "string") return;
       const editor = editorRef.value.get() as Editor;
@@ -170,26 +178,26 @@ export default defineComponent({
       }
     });
     createEditor();
-    
+
     const stop = watchEffect(() => {
       if (editorRef.value) {
-        const timer = setInterval(async ()=>{
+        const timer = setInterval(async () => {
           const editor = editorRef.value.get() as Editor;
-          if(editor){
-            if(content.value && content.value.includes(`# `)){
+          if (editor) {
+            if (content.value && content.value.includes(`# `)) {
               const ol = await updateOutline();
-              if(!ol){
+              if (!ol) {
                 return;
               }
             }
             clearInterval(timer);
-            context.emit("ready")
+            context.emit("ready");
             vscode.postMessage({
               type: "ready",
             });
             stop();
           }
-        },100)
+        }, 100);
       }
     });
 

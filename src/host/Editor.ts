@@ -33,6 +33,7 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
   template: string = "";
   webview!: vscode.Webview;
   content: string = "";
+  private eol: "CRLF"|"LF" = "LF";
   private clientLock = false;
 
   constructor(public readonly type: string, private disposables: any[]) {
@@ -48,6 +49,11 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     this.webview.options = {
       enableScripts: true,
     };
+    const text = document.getText();
+    if(text.match(/\r\n/)){
+      this.eol = "CRLF";
+    };
+
     if (!this.template) {
       const templatePath = path.resolve(__dirname, `../client/${this.type}/index.html`);
       const templateUri = Uri.file(templatePath);
@@ -62,12 +68,12 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     this.clientLock = true;
     const text = document.getText();
     if (text === content) { return; }
-    this.content = content;
+    this.content = this.eol==="CRLF"?content.replace(/\n/g,'\r\n'):content;
     const workspaceEdit = new WorkspaceEdit();
     workspaceEdit.replace(
       document.uri,
       new Range(0, 0, document.lineCount, 0),
-      content
+      this.content
     );
     workspace.applyEdit(workspaceEdit);
   }
@@ -79,7 +85,6 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     const result = this.template
       // .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
       .replace("{{base}}", assetsPath + "/")
-      .replace("{{init-data}}", document.getText().replace(new RegExp("\n", "g"), "<br>"))
       .replace(new RegExp("{{cspSource}}", "g"), this.webview.cspSource)
       .replace(new RegExp("{{nonce}}", "g"), nonce)
       .replace("{{init-config}}", JSON.stringify({
@@ -87,7 +92,9 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
           1: "light",
           2: "dark",
           3: "highContrast"//HighContrast
-        }[window.activeColorTheme.kind])
+        }[window.activeColorTheme.kind]),
+        uri:document.uri.toString(),
+        EOL:this.eol
       }));
     return result;
   }
@@ -134,9 +141,10 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
   updateWebview(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
     const text = document.getText();
     if (text === this.content) { return; }
+
     webviewPanel.webview.postMessage({
       type: 'change',
-      text,
+      text: text.replace(/\r\n/g,"\n"),
     });
   }
   register() {

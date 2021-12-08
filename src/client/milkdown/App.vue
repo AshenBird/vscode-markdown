@@ -8,14 +8,18 @@ import {
   NTree,
   NInput,
   NSpace,
+  NPopselect,
+  NIcon,
+  NButton,
   darkTheme,
   TreeOption,
 } from "naive-ui";
+import { InformationCircleOutline as InfoIcon } from "@vicons/ionicons5";
 import MilkdownEditor from "./Editor.vue";
 import { Key } from "naive-ui/lib/tree/src/interface";
 
 // 初始化配置项
-let config: Record<string, unknown> = {};
+let config: Record<string, string> = {};
 const configBus = document.getElementById("Config");
 if (configBus) {
   config = JSON.parse(configBus.innerText);
@@ -24,7 +28,8 @@ if (configBus) {
 
 // 主题配置
 const theme = config.theme === "dark" ? darkTheme : null;
-
+// URI
+const uri = ref<string>(config.uri || "");
 /** 大纲功能 **/
 // 大纲树类型
 export interface OutlineTreeOption extends TreeOption {
@@ -32,6 +37,26 @@ export interface OutlineTreeOption extends TreeOption {
 }
 // 用来检索大纲的数据
 const pattern = ref("");
+provide("pattern", pattern);
+const onPatternChange = (text: string) => {
+  pattern.value = text;
+  const flatNodes = [];
+  flatNodes.push(...document.querySelectorAll(`.n-tree-node-wrapper`));
+  flatNodes.forEach((node, index) => {
+    if (
+      (
+        node.querySelector(".n-tree-node-content__text") as HTMLElement
+      ).innerHTML.includes(text)
+    ) {
+      (node as HTMLElement).style.display = "";
+      return;
+    }
+    if (text) {
+      (node as HTMLElement).style.display = "none";
+    }
+  });
+  // pattern.value
+};
 // 大纲树数据
 const outline = ref<OutlineTreeOption[]>([]);
 // 扁平的大纲数据
@@ -78,11 +103,10 @@ const onScroll = () => {
   selectedKeys.value = [rs[0][1].key];
   const suffix = document.getElementById(rs[0][1].key);
   suffix?.scrollIntoView({
-    block:"center",
+    block: "center",
     behavior: "smooth",
   });
 };
-
 
 // 大纲元素被点击时的响应
 const outlineSelected = ((
@@ -93,54 +117,116 @@ const outlineSelected = ((
   if (list.length > 0) {
     scrollLock.value = true;
     list[0]?.scroll();
-    const timer = setInterval(()=>{
-      if(Date.now()-lastScrollTime.value<=200)return;
+    const timer = setInterval(() => {
+      if (Date.now() - lastScrollTime.value <= 200) return;
       scrollLock.value = false;
-      clearInterval(timer)
-    },200)
+      clearInterval(timer);
+    }, 200);
   }
 }) as (value: Key[], option: Array<TreeOption | null>) => void;
 
+const editorLeftPadding = ref(60);
+const editorStyle = computed(
+  () => `padding: 20px; padding-left: ${editorLeftPadding.value}px;`
+);
+
+// resize
+const getSidebarWidth = () => {
+  const limit = 250;
+  const w = window.innerWidth;
+  const rw = w * 0.2;
+  if (w < 600) {
+    editorLeftPadding.value = 0;
+    return 0;
+  }
+  editorLeftPadding.value = 60;
+  return rw < limit ? limit : rw;
+};
+const sideWidth = ref(getSidebarWidth());
+window.onresize = () => {
+  sideWidth.value = getSidebarWidth();
+};
+
+const infos = ref([
+  {
+    label: uri.value,
+    value: "uri",
+  },
+  {
+    label:`EOL: ${config.EOL}`,
+    value:"eol"
+  }
+]);
 </script>
 <template>
   <n-config-provider :theme="theme">
-    <n-layout style="height: 100vh; background-color: var(--surface)">
-      <!-- <n-layout-header
-        style="height: 50px; padding: 24px"
+    <n-layout class="top-container">
+      <n-layout-header
+        style="
+          height: 30px;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+        "
         bordered
-      ></n-layout-header> -->
+      >
+        <n-popselect :options="infos" size="medium">
+          <n-button
+            #icon
+            strong
+            quaternary
+            circle
+            size="tiny"
+            style="margin-right: 8px"
+          >
+            <n-icon>
+              <info-icon />
+            </n-icon>
+          </n-button>
+        </n-popselect>
+      </n-layout-header>
       <n-layout
         position="absolute"
-        style="top: 0px; background-color: var(--surface)"
+        style="top: 30px; background-color: var(--surface)"
         has-sider
       >
         <n-layout-sider
           :native-scrollbar="false"
           collapse-mode="transform"
           :collapsed-width="0"
-          :width="350"
+          :width="sideWidth"
           show-trigger="bar"
           content-style="padding: 24px;"
           bordered
         >
           <n-space vertical :size="12">
-            <n-input v-model:value="pattern" placeholder="搜索" />
+            <n-input
+              :value="pattern"
+              @input="onPatternChange"
+              placeholder="搜索"
+            />
             <n-tree
               :default-expand-all="true"
               :expanded-keys="expandedKeys"
               :selected-keys="selectedKeys"
               selectable
               :data="outlineShow"
-              block-line
+              block-node
               @update:selected-keys="outlineSelected"
               @update-expanded-keys="outlineExpendChange"
             />
           </n-space>
+          <!-- <div
+            class="drag-stick"
+            draggable="true"
+            @drag="resize"
+            @dragover="resize"
+          ></div> -->
         </n-layout-sider>
         <n-layout
-          content-style="padding: 20px; padding-left:60px;"
+          :content-style="editorStyle"
           style="background-color: var(--surface)"
-          :native-scrollbar="false"
+          :native-scrollbar="true"
           @scroll="onScroll"
         >
           <milkdown-editor @ready="onScroll" :config="config" />
@@ -149,3 +235,22 @@ const outlineSelected = ((
     </n-layout>
   </n-config-provider>
 </template>
+<style lang="scss">
+.drag-stick {
+  $color: #555;
+  // $height: 50px;
+  box-sizing: border-box;
+  width: 10px;
+  border-left: 2px solid $color;
+  border-right: 2px solid $color;
+  // border-radius: 5px;
+  background-color: $color;
+  // height: $height;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  // top: calc(50% - #{$height}/ 2);
+  // right: 10px;
+  left: 330px;
+}
+</style>
