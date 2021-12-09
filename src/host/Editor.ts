@@ -29,131 +29,211 @@ function arr2str(arr: Uint8Array) {
   const decoder = new StringDecoder();
   return decoder.end(Buffer.from(arr));
 }
-export class MarkdownEditorProvider implements CustomTextEditorProvider {
-  template: string = "";
-  webview!: vscode.Webview;
-  content: string = "";
-  private eol: "CRLF"|"LF" = "LF";
-  private clientLock = false;
 
+interface DocStore {
+  content: string;
+  lock: boolean;
+}
+export class MarkdownEditorProvider implements CustomTextEditorProvider {
+  // 注册函数
+  static register(instance: MarkdownEditorProvider, disposables: vscode.Disposable[]) {
+    // const type = this.type;
+    disposables.push(
+      vscode.window.registerCustomEditorProvider(
+        `MarkSwift`,
+        instance,
+        { webviewOptions: { retainContextWhenHidden: true } }
+      ));
+  };
+
+  // 大致分为两个部分，编辑器实例部分，和视图层 resolve 部分
+
+  // 编辑器实例
+  template: string = ""; // 模板数据
+
+  private storage = new Map<unknown, DocStore>();
+  /**
+   * @constructor
+   * @param type 
+   * @param disposables 
+   */
   constructor(public readonly type: string, private disposables: any[]) {
-    this.register();
+    MarkdownEditorProvider.register(this, this.disposables);
   }
+
+  // resolve 视图
+  content: string = "";
 
   public async resolveCustomTextEditor(
     document: TextDocument,
     webviewPanel: WebviewPanel,
     token: CancellationToken
   ) {
-    this.webview = webviewPanel.webview;
-    this.webview.options = {
+    
+    const uri = document.uri.toString();
+    if (!this.storage.has(uri)) {
+      this.storage.set(uri, {
+        content: "",
+        lock: false
+      });
+    }
+
+    webviewPanel.webview.options = {
       enableScripts: true,
-    };
-    const text = document.getText();
-    if(text.match(/\r\n/)){
-      this.eol = "CRLF";
     };
 
     if (!this.template) {
-      const templatePath = path.resolve(__dirname, `../client/${this.type}/index.html`);
+      const templatePath = path.resolve(__dirname, `../client/milkdown/index.html`);
       const templateUri = Uri.file(templatePath);
       const arr = await workspace.fs.readFile(templateUri);
       this.template = arr2str(arr);
     }
-    this.mountListener(document, webviewPanel);
-    this.webview.html = this.createHTML(document);
+
+
+
+    this.listen(document, webviewPanel);
+
+    webviewPanel.webview.html = this.createHTML(document, webviewPanel);
   }
 
-  private async updateDocument(content: string, document: TextDocument) {
-    this.clientLock = true;
-    const text = document.getText();
-    if (text === content) { return; }
-    this.content = this.eol==="CRLF"?content.replace(/\n/g,'\r\n'):content;
-    const workspaceEdit = new WorkspaceEdit();
-    workspaceEdit.replace(
-      document.uri,
-      new Range(0, 0, document.lineCount, 0),
-      this.content
-    );
-    workspace.applyEdit(workspaceEdit);
-  }
-
-  private createHTML(document: TextDocument) {
-    const assetsPath = this.webview
-      .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, `../client/${this.type}`)));
+  /**
+   * 创建 html 文件
+   * @param document 
+   * @returns 
+   */
+  private createHTML(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
+    const assetsPath = webviewPanel.webview
+      .asWebviewUri(vscode.Uri.file(path.resolve(__dirname, `../client/milkdown`)));
     const nonce = getNonce();
     const result = this.template
-      // .replace(new RegExp("/mcswift://", "g"), assetsPath + "/")
       .replace("{{base}}", assetsPath + "/")
-      .replace(new RegExp("{{cspSource}}", "g"), this.webview.cspSource)
-      .replace(new RegExp("{{nonce}}", "g"), nonce)
-      .replace("{{init-config}}", JSON.stringify({
-        theme: ({
-          1: "light",
-          2: "dark",
-          3: "highContrast"//HighContrast
-        }[window.activeColorTheme.kind]),
-        uri:document.uri.toString(),
-        EOL:this.eol
-      }));
+      .replace(new RegExp("{{cspSource}}", "g"), webviewPanel.webview.cspSource)
+      .replace(new RegExp("{{nonce}}", "g"), nonce);
     return result;
   }
 
-  private mountListener(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
-    this.webview.onDidReceiveMessage(({ type, content }: Message) => {
+  /**
+   * 
+   * @param document 
+   * @param webviewPanel 
+   */
+  private listen(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
+    const uri = document.uri.toString();
+    const store = this.storage.get(uri) as DocStore;
+
+    // 监听 webview 
+    webviewPanel.webview.onDidReceiveMessage(({ type, content }: Message) => {
       const actions = {
-        change: this.updateDocument,
+        change: this.updateDocument.bind(this),
         ready: () => {
-          console.log('---editor is ready---');
-          this.clientLock = false;
-          this.content = '';
-          this.updateWebview(document, webviewPanel);
+          store.lock = false;
+          store.content = '';
+          this.sendContent(document, webviewPanel.webview);
+          this.sendConfig(document, webviewPanel.webview);
           return;
         }
       };
       actions[type](content, document);
     });
 
+    // 监听 文档变更时间
     const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(async (e) => {
-      if (this.clientLock) {
-        this.clientLock = false;
+      const uri = document.uri.toString();
+      const store = this.storage.get(uri) as DocStore;
+
+      // 当前视图造成的变更
+      if (store.lock) {
+        store.lock = false;
         return;
       }
+
+      // 不是当前文档的变更
       if (e.document !== document) {
         return;
       }
+
       // Sometimes VS Code reports a document change without a change.
+      // 没有发生实际变更的
       if (e.contentChanges.length === 0) {
         return;
       }
-      this.updateWebview(document, webviewPanel);
+
+      // 发生变更时就发送数据 
+      this.sendContent(document, webviewPanel.webview);
     });
 
+    // dispose 监听
     webviewPanel.onDidDispose(() => {
       changeDocumentSubscription.dispose();
     });
+
+    // 主题改变的监听
     vscode.window.onDidChangeActiveColorTheme(() => {
       webviewPanel.webview.postMessage({
         type: 'restart',
       });
     });
   }
-  updateWebview(document: TextDocument, webviewPanel: vscode.WebviewPanel) {
-    const text = document.getText();
-    if (text === this.content) { return; }
 
-    webviewPanel.webview.postMessage({
-      type: 'change',
-      text: text.replace(/\r\n/g,"\n"),
+  /**
+   * 发送配置
+   * @param document 
+   * @param webview 
+   */
+  private sendConfig(document: TextDocument, webview: vscode.Webview) {
+    const config = {
+      theme: ({
+        1: "light",
+        2: "dark",
+        3: "highContrast"//HighContrast
+      }[window.activeColorTheme.kind]),
+      uri: document.uri.toString(),
+      eol: ({ 1: 'LF', 2: "CRLF" }[document.eol]),
+      mode: "edit",
+    };
+    webview.postMessage({
+      type: 'config',
+      content: config,
     });
   }
-  register() {
-    // const type = this.type;
-    this.disposables.push(
-      vscode.window.registerCustomEditorProvider(
-        `MarkSwift`,
-        this,
-        { webviewOptions: { retainContextWhenHidden: true } }
-      ));
-  };
+
+  /**
+   * 发送内容
+   * @param document 
+   * @param webview 
+   * @returns 
+   */
+  private sendContent(document: TextDocument, webview: vscode.Webview) {
+    const text = document.getText();
+    const uri = document.uri.toString();
+    const store = this.storage.get(uri) as DocStore;
+
+    if (text === store.content) { return; }
+
+    webview.postMessage({
+      type: 'change',
+      text: text.replace(/\r\n/g, "\n"),
+    });
+  }
+
+  // 更新文档
+  private async updateDocument(content: string, document: TextDocument) {
+    
+    console.log("更新文档",this.storage instanceof Map );
+    const uri = document.uri.toString();
+    const store = this.storage.get(uri) as DocStore;
+    store.lock = true;
+    const text = document.getText();
+    if (text === content) { return; }
+    store.content = document.eol === 2 ? content.replace(/\n/g, '\r\n') : content;
+    const workspaceEdit = new WorkspaceEdit();
+    workspaceEdit.replace(
+      document.uri,
+      new Range(0, 0, document.lineCount, 0),
+      store.content
+    );
+    workspace.applyEdit(workspaceEdit);
+  }
+
+
 }

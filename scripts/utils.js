@@ -1,13 +1,13 @@
 const path = require("path");
 
 const getPath = (p) => path.resolve(__dirname, "../", p);
-
-const createClientBuildConfig = (path, watch=undefined) => ({
-  root: getPath(`src/client/${path}/`),
+// const publicDir = getPath (`src/client/milkdown/public/`);
+const createClientBuildConfig = (p, watch=undefined) => ({
+  root: getPath(`src/client/${p}/`),
   base: "./",
-  publicDir:getPath (`src/client/${path}/public/`),
+  // publicDir,
   build: {
-    outDir: getPath(`out/client/${path}/`),
+    outDir: getPath(`out/client/${p}/`),
     emptyOutDir: true,
     watch,
   },

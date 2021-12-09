@@ -1,20 +1,10 @@
 <script lang="tsx">
-import { Slice } from "prosemirror-model";
-import {
-  defineComponent,
-  onMounted,
-  ref,
-  Ref,
-  inject,
-  watchEffect,
-  nextTick,
-} from "vue";
+import { defineComponent, ref, Ref, inject, watchEffect, watch } from "vue";
 import {
   Editor,
   rootCtx,
-  editorViewCtx,
-  parserCtx,
   defaultValueCtx,
+  editorViewOptionsCtx,
 } from "@milkdown/core";
 import { vscode as vscodeTheme } from "./theme-vscode/index";
 // Github Markdown 语法插件
@@ -44,9 +34,6 @@ import { debounce, getTitles } from "./utils";
 // 样式
 import "katex/dist/katex.min";
 
-// @ts-ignore
-const vscode = acquireVsCodeApi();
-
 export default defineComponent({
   emits: {
     change: null,
@@ -59,30 +46,39 @@ export default defineComponent({
     },
   },
   setup: (props, context) => {
+    const create = inject(
+      "create",
+      ref(() => {})
+    );
+    const editorRef = inject("editorRef") as Ref<EditorRef>;
+    const content = inject("content", ref(""));
+    const ready = inject("ready", ref(false));
+    const config = inject("config");
+
     // 大纲
     const outline = inject("outline") as Ref<unknown[]>;
     const flatOutline = inject("flatOutline") as Ref<unknown[]>;
-    const pattern = inject("pattern") as Ref<string>
+    const pattern = inject("pattern") as Ref<string>;
+    const readonly = inject("readonly") as Ref<boolean>;
+
     const updateOutline = async () => {
       const { tree, list } = getTitles(pattern.value);
       outline.value = tree;
       flatOutline.value = list;
       return outline.value;
     };
-    const state = vscode.getState();
-    const content = ref("");
-    if (state?.text) {
-      content.value = state.text;
-    }
+
     const isOption = ref(false);
-    const editorRef = ref() as Ref<EditorRef>;
+
+    // 编辑器
     const getEditor = ref();
-    const createEditor = () => {
+    create.value = () => {
       getEditor.value = useEditor((root) =>
         Editor.make()
           .config((ctx) => {
             ctx.set(rootCtx, root);
             ctx.set(defaultValueCtx, content.value);
+            ctx.set(editorViewOptionsCtx, { editable: () => !readonly.value });
             ctx.set(listenerCtx, {
               markdown: [
                 debounce(
@@ -106,95 +102,34 @@ export default defineComponent({
       isOption.value = true;
     };
 
-    const serverLock = ref(false);
     // 编辑器内容变更事件响应
     const onChange = (getContent: () => string) => {
-      if (serverLock.value) {
-        serverLock.value = false;
-        return;
-      }
       const text = getContent();
       if (content.value === text) return;
-      updateOutline();
       content.value = text;
-      vscode.setState({ text });
-      vscode.postMessage({
-        type: "change",
-        content: getContent(),
-      });
     };
-
-    const updateEditor = (markdown: string) => {
-      if (typeof markdown !== "string") return;
-      const editor = editorRef.value.get() as Editor;
-      editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const parser = ctx.get(parserCtx);
-        const doc = parser(markdown);
-        if (!doc) {
-          return;
-        }
-        content.value = markdown;
-        const state = view.state;
-        view.dispatch(
-          state.tr.replace(
-            0,
-            state.doc.content.size,
-            new Slice(doc.content, 0, 0)
-          )
-        );
-      });
-    };
-
-    const restartEditor = () => {
-      const editor = editorRef.value.get() as Editor;
-      editor.action(async (ctx) => {
-        const view = ctx.get(editorViewCtx);
-        view.dom.parentElement?.remove();
-        await createEditor();
-        isOption.value = true;
-        vscode.postMessage({
-          type: "ready",
-        });
-      });
-    };
-    window.addEventListener("message", (event) => {
-      const message = event.data;
-      switch (message.type) {
-        case "change": {
-          const text = message.text;
-          if (text === content.value) return;
-          serverLock.value = true;
-
-          updateEditor(text);
-          vscode.setState({ text });
-
-          return;
-        }
-        case "restart": {
-          restartEditor();
-          return;
-        }
-      }
+    watch(content, (n, o) => {
+      if (n === o) return;
+      updateOutline();
     });
-    createEditor();
+
+    create.value();
 
     const stop = watchEffect(() => {
       if (editorRef.value) {
         const timer = setInterval(async () => {
           const editor = editorRef.value.get() as Editor;
           if (editor) {
-            if (content.value && content.value.includes(`# `)) {
-              const ol = await updateOutline();
-              if (!ol) {
-                return;
-              }
-            }
+            // if (content.value && content.value.includes(`# `)) {
+            //   const ol = await updateOutline();
+            //   if (!ol) {
+            //     return;
+            //   }
+            // }
             clearInterval(timer);
+
             context.emit("ready");
-            vscode.postMessage({
-              type: "ready",
-            });
+            ready.value = true;
             stop();
           }
         }, 100);

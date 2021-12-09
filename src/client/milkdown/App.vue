@@ -18,18 +18,17 @@ import { InformationCircleOutline as InfoIcon } from "@vicons/ionicons5";
 import MilkdownEditor from "./Editor.vue";
 import { Key } from "naive-ui/lib/tree/src/interface";
 
-// 初始化配置项
-let config: Record<string, string> = {};
-const configBus = document.getElementById("Config");
-if (configBus) {
-  config = JSON.parse(configBus.innerText);
-  document.body.removeChild(configBus);
-}
+import { useVscode } from "./useVscode";
 
+const { config } = useVscode();
+
+const readonly = ref(config.value.mode === "read");
+
+provide("readonly", readonly);
 // 主题配置
-const theme = config.theme === "dark" ? darkTheme : null;
-// URI
-const uri = ref<string>(config.uri || "");
+const theme = computed(() =>
+  config.value.theme === "dark" ? darkTheme : null
+);
 /** 大纲功能 **/
 // 大纲树类型
 export interface OutlineTreeOption extends TreeOption {
@@ -99,7 +98,9 @@ const onScroll = () => {
     const { top } = item.getRect()[0];
     if (top > 0) rs.push([top, item]);
   }
+  if (rs.length === 0) return;
   rs.sort((a, b) => a[0] - b[0]);
+
   selectedKeys.value = [rs[0][1].key];
   const suffix = document.getElementById(rs[0][1].key);
   suffix?.scrollIntoView({
@@ -127,7 +128,11 @@ const outlineSelected = ((
 
 const editorLeftPadding = ref(60);
 const editorStyle = computed(
-  () => `padding: 20px; padding-left: ${editorLeftPadding.value}px;`
+  () => `
+    padding: 20px;
+    padding-left: ${editorLeftPadding.value}px;
+    padding-bottom: 0;
+  `
 );
 
 // resize
@@ -147,15 +152,15 @@ window.onresize = () => {
   sideWidth.value = getSidebarWidth();
 };
 
-const infos = ref([
+const infos = computed(()=>[
   {
-    label: uri.value,
+    label: config.value.uri,
     value: "uri",
   },
   {
-    label:`EOL: ${config.EOL}`,
-    value:"eol"
-  }
+    label: `eol: ${config.value.eol}`,
+    value: "eol",
+  },
 ]);
 </script>
 <template>
@@ -188,9 +193,10 @@ const infos = ref([
       <n-layout
         position="absolute"
         style="top: 30px; background-color: var(--surface)"
-        has-sider
+        :has-sider="!readonly"
       >
         <n-layout-sider
+          v-if="!readonly"
           :native-scrollbar="false"
           collapse-mode="transform"
           :collapsed-width="0"
@@ -216,12 +222,6 @@ const infos = ref([
               @update-expanded-keys="outlineExpendChange"
             />
           </n-space>
-          <!-- <div
-            class="drag-stick"
-            draggable="true"
-            @drag="resize"
-            @dragover="resize"
-          ></div> -->
         </n-layout-sider>
         <n-layout
           :content-style="editorStyle"
@@ -235,22 +235,3 @@ const infos = ref([
     </n-layout>
   </n-config-provider>
 </template>
-<style lang="scss">
-.drag-stick {
-  $color: #555;
-  // $height: 50px;
-  box-sizing: border-box;
-  width: 10px;
-  border-left: 2px solid $color;
-  border-right: 2px solid $color;
-  // border-radius: 5px;
-  background-color: $color;
-  // height: $height;
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  // top: calc(50% - #{$height}/ 2);
-  // right: 10px;
-  left: 330px;
-}
-</style>
