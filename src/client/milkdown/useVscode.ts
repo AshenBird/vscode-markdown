@@ -98,7 +98,6 @@ export const useVscode = () => {
           return;
         }
         case "config": {
-          console.log("config",message.content);
           config.value = message.content;
           return;
         }
