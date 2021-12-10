@@ -113,7 +113,7 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       { retainContextWhenHidden: true, enableFindWidget: true, enableScripts: true }
     );
     panel.webview.html = this.createHTML(document, panel);
-    
+    this.listen(document, panel);
     return panel;
   }
   /**
