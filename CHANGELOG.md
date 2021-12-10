@@ -1,5 +1,8 @@
 # Change Log
 
+## 0.1.7
+
+修复作为 webview 调用的接口
 ## 0.1.6
 
 修复作为 webview 调用的接口

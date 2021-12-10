@@ -90,6 +90,36 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       enableScripts: true,
     };
 
+    this.listen(document, webviewPanel);
+
+    webviewPanel.webview.html = await this.createHTML(document, webviewPanel);
+  }
+
+  public async createAsWebviewPanel(document: TextDocument) {
+    
+    const uri = document.uri.toString();
+    if (!this.storage.has(uri)) {
+      this.storage.set(uri, {
+        content: "",
+        lock: false,
+      });
+    }
+    const panel = window.createWebviewPanel(
+      "MarkSwift",
+      document.fileName,
+      -1,
+      { retainContextWhenHidden: true, enableFindWidget: true, enableScripts: true }
+    );
+    panel.webview.html = await this.createHTML(document, panel);
+    this.listen(document, panel);
+    return panel;
+  }
+  /**
+   * 创建 html 文件
+   * @param document
+   * @returns
+   */
+  private async createHTML(document: TextDocument, webviewPanel: WebviewPanel) {
     if (!this.template) {
       const templatePath = path.resolve(
         __dirname,
@@ -99,29 +129,6 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       const arr = await workspace.fs.readFile(templateUri);
       this.template = arr2str(arr);
     }
-
-    this.listen(document, webviewPanel);
-
-    webviewPanel.webview.html = this.createHTML(document, webviewPanel);
-  }
-
-  public createAsWebviewPanel(document: TextDocument) {
-    const panel = window.createWebviewPanel(
-      "MarkSwift",
-      document.fileName,
-      -1,
-      { retainContextWhenHidden: true, enableFindWidget: true, enableScripts: true }
-    );
-    panel.webview.html = this.createHTML(document, panel);
-    this.listen(document, panel);
-    return panel;
-  }
-  /**
-   * 创建 html 文件
-   * @param document
-   * @returns
-   */
-  private createHTML(document: TextDocument, webviewPanel: WebviewPanel) {
     const assetsPath = webviewPanel.webview.asWebviewUri(
       Uri.file(path.resolve(__dirname, `../client/milkdown`))
     );
