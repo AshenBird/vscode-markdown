@@ -17,11 +17,13 @@ export const useVscode = () => {
     eol: "LF",
     mode: "edit"
   });
+  const vscodeSave = ref(()=>{});
   provide("create", create);
   provide("editorRef", editorRef);
   provide("content", content);
   provide("ready", ready);
   provide("config", config);
+  provide("vscodeSave", vscodeSave);
   // @ts-ignore
   if (acquireVsCodeApi) {
 
@@ -82,7 +84,11 @@ export const useVscode = () => {
         type: "ready",
       });
     });
-
+    vscodeSave.value =()=>{
+      vscode.postMessage({
+        type: "save",
+      });
+    };
     window.addEventListener("message", (event) => {
       const message = event.data;
       switch (message.type) {
@@ -110,5 +116,6 @@ export const useVscode = () => {
     content,
     ready,
     config,
+    vscodeSave
   };
 };

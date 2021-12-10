@@ -51,26 +51,24 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
 
   // 编辑器实例
   template: string = ""; // 模板数据
-  private disposables:Disposable[]=[];
+  private disposables: Disposable[] = [];
   private storage = new Map<unknown, DocStore>();
   /**
    * @constructor
    * @param type
    */
-  constructor(public readonly type: string) {
-  }
-  public register(){
+  constructor(public readonly type: string) {}
+  public register() {
     const disposable = MarkdownEditorProvider.register(this);
     this.disposables.push(disposable);
     return this;
   }
 
-  public dispose(){
+  public dispose() {
     for (const item of this.disposables) {
       item.dispose();
     }
   }
-
 
   // resolve 视图
   public async resolveCustomTextEditor(
@@ -90,13 +88,12 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       enableScripts: true,
     };
 
-    this.listen(document, webviewPanel);
+    this.listen(document, webviewPanel, "editor");
 
     webviewPanel.webview.html = await this.createHTML(document, webviewPanel);
   }
 
   public async createAsWebviewPanel(document: TextDocument) {
-    
     const uri = document.uri.toString();
     if (!this.storage.has(uri)) {
       this.storage.set(uri, {
@@ -108,10 +105,14 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       "MarkSwift",
       document.fileName,
       -1,
-      { retainContextWhenHidden: true, enableFindWidget: true, enableScripts: true }
+      {
+        retainContextWhenHidden: true,
+        enableFindWidget: true,
+        enableScripts: true,
+      }
     );
     panel.webview.html = await this.createHTML(document, panel);
-    this.listen(document, panel);
+    this.listen(document, panel, "webview");
     return panel;
   }
   /**
@@ -145,7 +146,11 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
    * @param document
    * @param webviewPanel
    */
-  private listen(document: TextDocument, webviewPanel: WebviewPanel) {
+  private listen(
+    document: TextDocument,
+    webviewPanel: WebviewPanel,
+    mode: "webview" | "editor"
+  ) {
     const uri = document.uri.toString();
     const store = this.storage.get(uri) as DocStore;
 
@@ -160,6 +165,10 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
           this.sendConfig(document, webviewPanel.webview);
           return;
         },
+        save: ()=>{
+          if(mode==="editor"){return;}
+          document.save();
+        }
       };
       actions[type](content, document);
     });
@@ -193,7 +202,7 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     );
 
     // 主题改变的监听
-     const themeChangeSub = window.onDidChangeActiveColorTheme(() => {
+    const themeChangeSub = window.onDidChangeActiveColorTheme(() => {
       webviewPanel.webview.postMessage({
         type: "restart",
       });
@@ -203,7 +212,6 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       changeDocumentSubscription.dispose();
       themeChangeSub.dispose();
     });
-
   }
 
   /**

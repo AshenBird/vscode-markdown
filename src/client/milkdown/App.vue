@@ -110,6 +110,8 @@ const infos = computed(() => [
 const drawerActive = ref(false);
 const openDrawer = () => (drawerActive.value = true);
 
+const save = ()=>{}
+
 // 注入
 provide("flatOutline", flatOutline);
 provide("outline", outline);
@@ -122,7 +124,7 @@ provide("lastScrollTime", lastScrollTime);
 provide("readonly", readonly);
 </script>
 <template>
-  <n-config-provider :theme="theme">
+  <n-config-provider :theme="theme" @keyup.ctrl.s="save">
     <n-layout class="top-container" :has-sider="sideWidth !== 0">
       <n-layout-sider
         v-if="sideWidth !== 0"
