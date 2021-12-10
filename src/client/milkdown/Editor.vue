@@ -120,12 +120,6 @@ export default defineComponent({
         const timer = setInterval(async () => {
           const editor = editorRef.value.get() as Editor;
           if (editor) {
-            // if (content.value && content.value.includes(`# `)) {
-            //   const ol = await updateOutline();
-            //   if (!ol) {
-            //     return;
-            //   }
-            // }
             clearInterval(timer);
 
             context.emit("ready");

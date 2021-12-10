@@ -1,8 +1,10 @@
 
 import * as vscode from 'vscode';
-import {createMindMapExtensions} from "./Extension";
+import {MarkdownEditorProvider} from "./Editor";
 export function activate(context: vscode.ExtensionContext) {
-	context.subscriptions.push(...createMindMapExtensions(context));
+	const editor = new MarkdownEditorProvider("milkdown").register();
+	context.subscriptions.push(editor);
+	return { editor };
 }
 
 export function deactivate() {}

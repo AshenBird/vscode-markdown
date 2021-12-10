@@ -38,35 +38,41 @@ interface DocStore {
 }
 export class MarkdownEditorProvider implements CustomTextEditorProvider {
   // 注册函数
-  static register(instance: MarkdownEditorProvider, disposables: Disposable[]) {
-    // const type = this.type;
-    disposables.push(
-      window.registerCustomEditorProvider(`MarkSwift`, instance, {
-        webviewOptions: {
-          retainContextWhenHidden: true,
-          enableFindWidget: true,
-        },
-      })
-    );
+  static register(instance: MarkdownEditorProvider) {
+    return window.registerCustomEditorProvider(`MarkSwift`, instance, {
+      webviewOptions: {
+        retainContextWhenHidden: true,
+        enableFindWidget: true,
+      },
+    });
   }
 
   // 大致分为两个部分，编辑器实例部分，和视图层 resolve 部分
 
   // 编辑器实例
   template: string = ""; // 模板数据
-
+  private disposables:Disposable[]=[];
   private storage = new Map<unknown, DocStore>();
   /**
    * @constructor
    * @param type
-   * @param disposables
    */
-  constructor(public readonly type: string, private disposables: any[]) {
-    MarkdownEditorProvider.register(this, this.disposables);
+  constructor(public readonly type: string) {
+  }
+  public register(){
+    const disposable = MarkdownEditorProvider.register(this);
+    this.disposables.push(disposable);
+    return this;
   }
 
-  // resolve 视图
+  public dispose(){
+    for (const item of this.disposables) {
+      item.dispose();
+    }
+  }
 
+
+  // resolve 视图
   public async resolveCustomTextEditor(
     document: TextDocument,
     webviewPanel: WebviewPanel,
@@ -179,17 +185,18 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
       }
     );
 
-    // dispose 监听
-    webviewPanel.onDidDispose(() => {
-      changeDocumentSubscription.dispose();
-    });
-
     // 主题改变的监听
-    window.onDidChangeActiveColorTheme(() => {
+     const themeChangeSub = window.onDidChangeActiveColorTheme(() => {
       webviewPanel.webview.postMessage({
         type: "restart",
       });
     });
+    // dispose 监听
+    webviewPanel.onDidDispose(() => {
+      changeDocumentSubscription.dispose();
+      themeChangeSub.dispose();
+    });
+
   }
 
   /**
