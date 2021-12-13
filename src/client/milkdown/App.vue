@@ -21,7 +21,7 @@ import MilkdownEditor from "./Editor.vue";
 import OutlineView from "./Outline.vue";
 import { useVscode } from "./useVscode";
 
-const { config } = useVscode();
+const { config, vscodeSave } = useVscode();
 
 const readonly = ref(config.value.mode === "read");
 
@@ -110,7 +110,7 @@ const infos = computed(() => [
 const drawerActive = ref(false);
 const openDrawer = () => (drawerActive.value = true);
 
-const save = ()=>{}
+const save = ()=>{vscodeSave.value()}
 
 // 注入
 provide("flatOutline", flatOutline);
