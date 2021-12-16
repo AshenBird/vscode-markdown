@@ -14,6 +14,7 @@ export default defineConfig({
     watch:process.env.MODE==="watch"?{}:undefined,
   },
   plugins: [vue(), jsx()],
+  // @ts-ignore
   ssgOptions: {
     mock: true
   },

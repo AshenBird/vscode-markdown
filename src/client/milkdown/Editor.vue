@@ -109,7 +109,7 @@ export default defineComponent({
       content.value = text;
     };
     watch(content, (n, o) => {
-      if (n === o) return;
+      // if (n === o) return;
       updateOutline();
     });
 

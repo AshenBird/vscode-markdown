@@ -1,4 +1,5 @@
 import { h } from "vue";
+import { NText } from "naive-ui";
 export const debounce = <T extends unknown[]>(
   func: (...args: T) => void,
   delay: number
@@ -42,54 +43,55 @@ export const getTitles = (pattern:string) => {
   // 逐个遍历生成树
   flatNodes.forEach((node, index) => {
     const level = node.nodeName[1];
-    const id = `AT${index + 1}-${Date.now()}`;
+    const id = `L${level}-I${index + 1}`;
     currentGroup[level] = id;
     const item = {
       level,
-      label: node.textContent,
+      label: node.textContent||"",
       key: id,
       indent: 0,
-      suffix: () => h("i", { id, class: "outline-item-anchor" }),
-      prefix: () => h("i"),
+      // suffix: () => h("i", { id, class: "outline-item-anchor" }),
+      // @ts-ignore
+      suffix: ()=>(<NText depth="3" id={id} class="outline-prefix">H{level}</NText>),
       getRect: () => node.getClientRects(),
       scroll: () =>
         node.scrollIntoView({
           behavior: "smooth",
         }),
-      // children: [],
+      children: undefined,
+      fid:"",
     };
     list.set(id, item);
     groupMap.set(id, item);
 
     let fl = Number(level) - 1;
     let f: { indent: number; children: any[] } | null = null;
-    let indent = 0;
+    // let indent = 0;
     for (;;) {
       if (fl === 0) {
         return;
       }
-      let group = getGroup(fl);
+      // 获得分组
+      const group = getGroup(fl);
       f = list.get(group);
-      item.indent = indent;
-      item.prefix = () =>
-        h("i", {
-          class: `outline-indent-${
-            (f as { indent: number; children: any[] }).indent + indent
-          }`,
-        });
+      // item.indent = indent;
+      // 有直接父元素的
       if (f) {
+        // @ts-ignore
+        item.fid = f.key;
         break;
       }
       fl = fl - 1;
-      indent = indent + 1;
+      // indent = indent + 1;
     }
     if (!f.children) {
       f.children = [];
     }
+
     f.children.push(list.get(id));
     groupMap.delete(id);
+    
   });
-
   return {
     list: [...list.values()],
     tree: [...groupMap.values()],

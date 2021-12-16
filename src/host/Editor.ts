@@ -14,6 +14,7 @@ import {
 import * as path from "path";
 import { StringDecoder } from "string_decoder";
 import { Buffer } from "buffer";
+import * as fs from "fs";
 interface Message {
   type: "ready" | "change";
   content: string;
@@ -247,13 +248,14 @@ export class MarkdownEditorProvider implements CustomTextEditorProvider {
     const uri = document.uri.toString();
     const store = this.storage.get(uri) as DocStore;
 
-    if (text === store.content) {
+    if ((text === store.content) && text!=="") {
       return;
     }
 
     webview.postMessage({
       type: "change",
       text: text.replace(/\r\n/g, "\n"),
+      title: document.fileName.split(path.sep).slice(-1)[0].split(".")[0]||""
     });
   }
 
