@@ -15,7 +15,7 @@ export const debounce = <T extends unknown[]>(
 };
 
 // 文章导航实现
-export const getTitles = (pattern:string) => {
+export const getTitles = (pattern: string) => {
   const flatNodes = [];
   const groupMap = new Map();
   const list = new Map();
@@ -40,26 +40,37 @@ export const getTitles = (pattern:string) => {
   const getGroup = (level: number) => {
     return currentGroup[level.toString()];
   };
+  const clearSons = (level: number) => {
+    for (const i of Array(6 - level).keys()) {
+      Reflect.deleteProperty(currentGroup, (level + i + 1).toString());
+    }
+  };
   // 逐个遍历生成树
   flatNodes.forEach((node, index) => {
     const level = node.nodeName[1];
+    clearSons(Number(level));
     const id = `L${level}-I${index + 1}`;
     currentGroup[level] = id;
     const item = {
       level,
-      label: node.textContent||"",
+      label: node.textContent || "",
       key: id,
       indent: 0,
       // suffix: () => h("i", { id, class: "outline-item-anchor" }),
       // @ts-ignore
-      suffix: ()=>(<NText depth="3" id={id} class="outline-prefix">H{level}</NText>),
+      suffix: () => (
+        // @ts-ignore
+        <NText depth="3" id={id} class="outline-prefix">
+          H{level}
+        </NText>
+      ),
       getRect: () => node.getClientRects(),
       scroll: () =>
         node.scrollIntoView({
           behavior: "smooth",
         }),
       children: undefined,
-      fid:"",
+      fid: "",
     };
     list.set(id, item);
     groupMap.set(id, item);
@@ -90,7 +101,6 @@ export const getTitles = (pattern:string) => {
 
     f.children.push(list.get(id));
     groupMap.delete(id);
-    
   });
   return {
     list: [...list.values()],
