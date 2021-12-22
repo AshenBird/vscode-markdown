@@ -5,9 +5,9 @@ const { createClientBuildConfig, getPath } = require("./utils");
 
 fs.ensureDir(getPath("out"));
 const build = async () => {
-  // vite.build(createClientBuildConfig("milkdown"));
-  const clientBuilder = execa("pnpm", ["run", "build:client"]);
-  clientBuilder.stdout.pipe(process.stdout);
+  vite.build(createClientBuildConfig("milkdown"));
+  // const clientBuilder = execa("pnpm", ["run", "build:client"]);
+  // clientBuilder.stdout.pipe(process.stdout);
   const hostBuilder = execa("npm", ["run", "build:host"]);
   hostBuilder.stdout.pipe(process.stdout);
 };

@@ -17,13 +17,15 @@ watch(
   flatOutline,
   async (n, o) => {
     await nextTick();
-    // @ts-ignore
-    const oKeys = o?.map((item) => item.key as Key) || [];
-    const r = flatOutline.value.forEach((item) => {
-      if (oKeys.includes(item.key as Key)) return;
+    const r = new Set(expandedKeys.value)
+    const oKeys = new Set(o?.map((item) => item.key as Key) || []);
+    flatOutline.value.forEach((item) => {
+      if (oKeys.has(item.key as Key)) return;
       if (!item.fid) return;
-      expandedKeys.value.push(item.fid as Key);
+      r.add(item.fid as Key)
     });
+    expandedKeys.value = [...r]
+    // expandedKeys.value.push(item.fid as Key);
     // expandedKeys.value.push(...r)
   },
   {
@@ -37,6 +39,7 @@ const outlineExpendChange = ((
   keys: Key[],
   list: (OutlineTreeOption | null)[]
 ) => {
+  console.log(keys.length,expandedKeys.value.length)
   expandedKeys.value = keys;
 }) as (value: Key[], option: Array<TreeOption | null>) => void;
 
